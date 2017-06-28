@@ -1,16 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-
-    <Button
-        android:id="@+id/btn_createPDF"
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:text="生成PDF"
+        android:textSize="22sp"
+        android:textColor="@android:color/white"
+        android:background="@android:color/black"
+        android:gravity="center"/>
+    <LinearLayout
+        android:id="@+id/createLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="生成"
-        android:layout_margin="5dp"
-        android:textColor="@android:color/holo_purple"
-        android:textSize="20sp"
-        android:layout_centerInParent="true"/>
-</RelativeLayout>
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/et_inputFileContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="生成的内容"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:minLines="5"
+            android:gravity="start|top"
+            android:background="@drawable/bg_edit"
+            android:layout_margin="5dp"/>
+        <EditText
+            android:id="@+id/et_inputFileName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="文件名称"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:background="@drawable/bg_edit"
+            android:layout_margin="5dp"/>
+        <Button
+            android:id="@+id/btn_createPDF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="生成"
+            android:layout_margin="5dp"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:padding="5dp"
+            android:background="@drawable/bg_edit"/>
+    </LinearLayout>
+    <com.github.barteksc.pdfviewer.PDFView
+        android:id="@+id/view_pdfview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+</LinearLayout>

@@ -4,11 +4,15 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 
+import com.github.barteksc.pdfviewer.PDFView;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Font;
@@ -35,6 +39,9 @@ public class MainActivity extends Activity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE//用来更新下载时存储APK文件
     };
     private static final int PERMISSION_REQUEST_CODE = 0;
+    private EditText et_inputFileContent,et_inputFileName;
+    private LinearLayout createLayout;
+    private PDFView view_pdfview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,11 +50,22 @@ public class MainActivity extends Activity {
     }
 
     private void initView(){
-        Button btn_createPDF = (Button) findViewById(R.id.btn_createPDF);
+        createLayout = findViewById(R.id.createLayout);
+        et_inputFileContent = findViewById(R.id.et_inputFileContent);
+        et_inputFileName = findViewById(R.id.et_inputFileName);
+        view_pdfview = findViewById(R.id.view_pdfview);
+        Button btn_createPDF = findViewById(R.id.btn_createPDF);
         btn_createPDF.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                createPDF();
+                LemonBubble.showRoundProgress(MainActivity.this, "加载中");
+                String inputContent = et_inputFileContent.getText().toString();
+                String inputTitle = et_inputFileName.getText().toString();
+                if (inputContent.equals("") && inputTitle.equals("")){
+                    createPDF(null,null);
+                }else {
+                    createPDF(inputContent,inputTitle);
+                }
             }
         });
     }
@@ -91,11 +109,25 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void createPDF(){
+    /**
+     * 创建PDF
+     * @param inputContent  输入的内容
+     * @param inputTitle  输入的标题
+     */
+    private void createPDF(String inputContent,String inputTitle){
         BaseFont baseFont;
         try {
             Document document = new Document(PageSize.A4);
-            File file = new File("/sdcard/zzh/","test.pdf");//设置文件存放路径和文件名称
+            File file;
+            if (inputTitle == null) {
+                file = new File("/sdcard/zzh/", "test.pdf");//设置文件存放路径和文件名称
+            }else {
+                if (inputTitle.endsWith(".pdf")) {
+                    file = new File("/sdcard/zzh/", inputTitle);//设置文件存放路径和文件名称
+                }else {
+                    file = new File("/sdcard/zzh/", inputTitle+".pdf");//设置文件存放路径和文件名称
+                }
+            }
             FileOutputStream fos = new FileOutputStream(file);//写入
             PdfWriter.getInstance(document,fos);//pdf初始化
 
@@ -108,15 +140,27 @@ public class MainActivity extends Activity {
             document.addCreationDate();//加入创建的时间
             document.addCreator("牛叉叉的华爷");//添加创建人姓名
 
-            Paragraph paragraph = new Paragraph("为什么会有热修复这个东西呢？大家都知道如果我们的线上的app 由于某种原因crash？"+"\n"+
-                    "我们这时候不能怨测试没测好，后台接口有变化什么的，这不是解决问题的最终方式！"+"\n"+
-                    "要是以前我们肯定就是把重新上传app到各大渠道，从新上线，这个过程严重的影响到我们的用户体验非常不好，"+"\n"+
-                    "而且很耗时！作为程序员如何通过代码进行线上修复crash bug。。。呢？"+"\n"+
-                    "所以有了热修复这个功能 bat 每家都有自己的开源热修复库？我这里就讲一下如何通过反射的方式来实现修复功能吧！"+"\n"+
-                    "也就是通过DexClassLoader。如果大家对其他的开源库想要了解的话可以通过一下传送门",font);
+            Paragraph paragraph;
+            if (inputContent == null) {
+                paragraph = new Paragraph("为什么会有热修复这个东西呢？大家都知道如果我们的线上的app 由于某种原因crash？" + "\n" +
+                        "我们这时候不能怨测试没测好，后台接口有变化什么的，这不是解决问题的最终方式！" + "\n" +
+                        "要是以前我们肯定就是把重新上传app到各大渠道，从新上线，这个过程严重的影响到我们的用户体验非常不好，" + "\n" +
+                        "而且很耗时！作为程序员如何通过代码进行线上修复crash bug。。。呢？" + "\n" +
+                        "所以有了热修复这个功能 bat 每家都有自己的开源热修复库？我这里就讲一下如何通过反射的方式来实现修复功能吧！" + "\n" +
+                        "也就是通过DexClassLoader。如果大家对其他的开源库想要了解的话可以通过一下传送门", font);
+            }else {
+                paragraph = new Paragraph(inputContent,font);
+            }
             document.add(paragraph);//添加内容
             document.close();//关闭写入
-            Toast.makeText(MainActivity.this,"PDF创建成功",Toast.LENGTH_SHORT).show();
+            LemonBubble.showRight(MainActivity.this,"PDF"+inputTitle+"创建成功",1000);
+
+            Message message = new Message();
+            message.what = 0;
+            Bundle bundle = new Bundle();
+            bundle.putString("path",file.getAbsolutePath());
+            message.setData(bundle);
+            mHandler.sendMessageDelayed(message,1500);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             LemonBubble.showError(MainActivity.this,"错误1",2000);
@@ -127,5 +171,37 @@ public class MainActivity extends Activity {
             e.printStackTrace();
             LemonBubble.showError(MainActivity.this,"错误3",2000);
         }
+    }
+
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if (msg.what == 0){
+                Bundle bundle = msg.getData();
+                String path = bundle.getString("path");
+                if (!path.equals("") && path.endsWith(".pdf")){
+                    File file = new File(path);
+                    view_pdfview.fromFile(file)//加载路径
+                            .defaultPage(0)//默认打开的页面
+                            .swipeHorizontal(true)//是否横向滑动
+                            .enableAnnotationRendering(true)
+                            .enableDoubletap(true)//双击放大
+                            .load();//加载
+                    view_pdfview.setVisibility(View.VISIBLE);
+                    createLayout.setVisibility(View.GONE);
+                }
+            }
+        }
+    };
+
+    @Override
+    public void onBackPressed() {
+        if (view_pdfview.getVisibility() == View.VISIBLE){
+            view_pdfview.setVisibility(View.GONE);
+            createLayout.setVisibility(View.VISIBLE);
+            return;
+        }
+        super.onBackPressed();
     }
 }

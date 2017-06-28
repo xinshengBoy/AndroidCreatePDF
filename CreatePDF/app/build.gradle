@@ -32,4 +32,6 @@ dependencies {
     //对话框集成
     compile 'com.github.1em0nsOft:LemonHello4Android:1.0.1'
     compile 'com.github.1em0nsOft:LemonBubble4Android:1.0.12'
+    //加载pdf
+    compile 'com.github.barteksc:android-pdf-viewer:2.7.0-beta'
 }
